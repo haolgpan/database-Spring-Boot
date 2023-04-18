@@ -1,5 +1,10 @@
 package com.example.database;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -9,6 +14,8 @@ import java.util.List;
 public class CountryController {
     @Autowired
     CountryService countryService;
+    @Autowired
+    public ObjectMapper objectMapper; // Inject ObjectMapper using @Autowired
     public List<CountryDto> getAllCountry() {
         List<Country> countries = countryService.findAll();
 //        List<CountryDto> countryDtos = countries.stream().map(CountryDto::new).toList();
@@ -51,6 +58,14 @@ public class CountryController {
             return new CountryDto(updatedCountry);
         } else {
             throw new RuntimeException("Country with ID " + id + " not found.");
+        }
+    }
+    public CountryDto applyPatch(JsonPatch patch, CountryDto currentCountry) {
+        try {
+            JsonNode patched = patch.apply(objectMapper.convertValue(currentCountry, JsonNode.class));
+            return objectMapper.treeToValue(patched, CountryDto.class);
+        } catch (JsonPatchException | JsonProcessingException e) {
+            throw new RuntimeException("Failed to apply patch", e);
         }
     }
 }

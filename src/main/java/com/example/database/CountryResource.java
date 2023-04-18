@@ -18,8 +18,7 @@ public class CountryResource {
     public static final String COUNTRY = "/country";
     @Autowired
     CountryController countryController;
-    @Autowired
-    private ObjectMapper objectMapper; // Inject ObjectMapper using @Autowired
+
 
     @GetMapping
     public List<CountryDto> readAll(){
@@ -55,17 +54,10 @@ public class CountryResource {
     @PatchMapping("{id}/patch-update")
     public CountryDto partialUpdateCountry(@PathVariable Integer id, @RequestBody JsonPatch patch) {
         CountryDto currentCountry = countryController.getCountryById(id);
-        CountryDto patchedCountry = applyPatch(patch, currentCountry);
+        CountryDto patchedCountry = countryController.applyPatch(patch, currentCountry);
         countryController.updateCountryById(id, patchedCountry);
         return patchedCountry;
     }
 
-    private CountryDto applyPatch(JsonPatch patch, CountryDto currentCountry) {
-        try {
-            JsonNode patched = patch.apply(objectMapper.convertValue(currentCountry, JsonNode.class));
-            return objectMapper.treeToValue(patched, CountryDto.class);
-        } catch (JsonPatchException | JsonProcessingException e) {
-            throw new RuntimeException("Failed to apply patch", e);
-        }
-    }
+
 }
